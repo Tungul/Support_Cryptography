@@ -1,4 +1,6 @@
-Support_Cryptography
-====================
+Script_Crypto
+=============
 
-Cryptography methods and functionality in torquescript.
+attempt to implement cryptography in torquescript
+
+there's no way in hell this will work, surely.
