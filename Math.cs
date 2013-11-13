@@ -1,10 +1,15 @@
 // ---------------------------- //
 // Large Integer Math Functions //
 // by Ipquarx (BL_ID 9291)		//
-// ---------------------------- // ----------- //
-// Allows for addition, subtraction,		   //
-// and multiplication of integers of any size. //
-// ------------------------------------------- //
+// ---------------------------- // ------------ //
+// Allows for addition, subtraction,			//
+// and multiplication of numbers of any size.	//
+// --------------------------------------------	//
+
+$log10 = mLog(10);
+$log2 = mLog(2);
+$l210 = $log10 * $log2;
+$l217 = $log2 * mLog(17);
 
 //Addition
 function Math_Add(%num1, %num2)
@@ -15,16 +20,16 @@ function Math_Add(%num1, %num2)
 	
 	//Account for sign rules
 	if(%num1 >= 0 && %num2 >= 0)
-		return intAdd(%num1, %num2);
+		return stringAdd(%num1, %num2);
 	if(%num1 < 0 && %num2 >= 0)
 		return stringSub(%num2, switchS(%num1));
 	if(%num1 < 0 && %num2 < 0)
-		return "-" @ intAdd(switchS(%num1), switchS(%num2));
+		return "-" @ stringAdd(switchS(%num1), switchS(%num2));
 	if(%num1 >= 0 && %num2 < 0)
 		return stringSub(%num1, switchS(%num2));
 	
 	//dont know when this would happen but whatev
-	return intadd(%num1,%num2);
+	return stringadd(%num1,%num2);
 }
 
 //Subtraction
@@ -38,9 +43,9 @@ function Math_Subtract(%num1, %num2)
 	if(%num1 >= 0 && %num2 >= 0)
 		return stringSub(%num1, %num2);
 	if(%num1 >= 0 && %num2 < 0)
-		return intAdd(%num1, switchS(%num2));
+		return stringAdd(%num1, switchS(%num2));
 	if(%num1 < 0 && %num2 >= 0)
-		return "-" @ intAdd(%num2, switchS(%num1));
+		return "-" @ stringAdd(%num2, switchS(%num1));
 	if(%num1 < 0 && %num2 < 0)
 		return stringSub(switchS(%num2), switchS(%num1));
 	
@@ -49,7 +54,12 @@ function Math_Subtract(%num1, %num2)
 }
 
 //Multiplication
+<<<<<<< HEAD
 function Math_Multiply(%num1,%num2)
+=======
+//0 for maxplaces means no limit, -1 means no decimal places
+function Math_Multiply(%num1,%num2, %maxplaces)
+>>>>>>> 553028573cb0d793601998f536b7be287639440e
 {
 	//Check if we can use torque multiplication
 	if((%a=strLen(%num1 @ %num2)) < 7)
@@ -63,6 +73,7 @@ function Math_Multiply(%num1,%num2)
 	if(%Num2 < 0)
 		%Num2 = switchS(%Num2);
 	
+<<<<<<< HEAD
 	//Check if it's better to use classic or karatsuba
 	if(%a - strLen(%num2) < 15 && %a - strLen(%num1) < 15)
 		return %ans @ strMul(%num1, %num2);
@@ -77,6 +88,50 @@ function Math_Pow(%num1, %num2)
 	if(%num2 == 0 || %num1 == 1)
 		return 1;
 	
+=======
+	%num1 = cleanNumber(%num1); %num2 = cleanNumber(%num2);
+	
+	if(%maxplaces == 0)
+		%maxplaces=-2;
+	
+	%a = getPlaces(%num1); %b = getPlaces(%num2);
+	%c = getMax(%a, %b);
+	
+	if(%c != 0)
+	{
+		%places = %a + %b;
+		%num1 = cleanNumber(strReplace(%num1, ".", ""));
+		%num2 = cleanNumber(strReplace(%num2, ".", ""));
+	}
+	
+	if(%a - strLen(%num2) < 40 && %a - strLen(%num1) < 40)
+		%ans = %ans @ strMul(%num1, %num2);
+	else
+		%ans = %ans @ Karat(%num1, %num2);
+	
+	if(%c != 0)
+	{
+		%ans = cleanNumber(placeDecimal(%ans, %places));
+		if(%maxplaces != -1)
+		{
+			if(%maxplaces > 0)
+				%ans = getIntPart(%ans) @ "." @ getSubStr(getDecPart(%ans), 0, %maxplaces);
+		}
+		else
+			%ans = getIntPart(%ans);
+	}
+		
+	return %ans;
+}
+
+function Math_Pow(%num1, %num2)
+{
+	if(%num2 < 0)
+		return 0;
+	if(%num2 == 0 || %num1 == 1)
+		return 1;
+	
+>>>>>>> 553028573cb0d793601998f536b7be287639440e
 	return expon(%num1, %num2);
 }
 
@@ -150,6 +205,7 @@ function strMul(%Num1,%Num2)
 //Karatsuba multiplication algorithm
 //This is faster than the classic multiplication for most numbers greater than 40 digits long.
 function Karat(%num1,%num2)
+<<<<<<< HEAD
 {
 	%len1 = strLen(%num1); %len2 = strLen(%num2);
 	if(%len1 + %len2 <= 40 || %len1 < 5 || %len2 < 5)
@@ -204,67 +260,163 @@ function Karat(%num1,%num2)
 }
 
 function intAdd(%num1,%num2)
+=======
+>>>>>>> 553028573cb0d793601998f536b7be287639440e
 {
-	%l1=strLen(%num1)-1;
-	%l2=strLen(%num2)-1;
-	%f=getMax(%l1,%l2);
-	for(%a=%f;%a>=0;%a--)
+	%len1 = strLen(%num1); %len2 = strLen(%num2);
+	if(%len1 + %len2 <= 40 || %len1 < 5 || %len2 < 5)
+		return strMul(%num1, %num2);
+	%m = mCeil(getMax(%len1, %len2) / 2);
+	%y=%len1-%m;
+	%z=%len2-%m;
+	if(%num1 $= "0" || %num2 $= "0")
+		return "0";
+	if(%len1 <= %m)
 	{
+		%x0 = %num1;
+		%x1 = "0";
+		%y0 = getSubStr(%num2, %z, %len2);
+		%a = %len2 % %m;
+		if(%a == 0)
+			%y1 = getSubStr(%num2, 0, %m);
+		else
+			%y1 = getSubStr(%num2, 0, %a);
+	}
+	else if(%len2 <= %m)
+	{
+<<<<<<< HEAD
 		%d = %l1 - (%f-%a);
 		%e = %l2-(%f-%a);
 		%b = %d >=0 ? getSubStr(%Num1,%d,1) : "0";
 		%c = %e >=0 ? getSubStr(%Num2,%e,1) : "0";
 		%res = %b+%c+%Carry;
+=======
+		%y0 = %num2;
+		%y1 = "0";
+		%x0 = getSubStr(%num1, %y, %len1);
+		%a = %len1 % %m;
+		if(%a == 0)
+			%x1 = getSubStr(%num1, 0, %m);
+		else
+			%x1 = getSubStr(%num1, 0, %a);
+	}
+	else
+	{
+		%x0 = getSubStr(%num1, %y, %len1);
+		%a = %len1 % %m;
+		if(%a == 0)
+			%x1 = getSubStr(%num1, 0, %m);
+		else
+			%x1 = getSubStr(%num1, 0, %a);
+		%y0 = getSubStr(%num2, %z, %len2);
+		%a = %len2 % %m;
+		if(%a == 0)
+			%y1 = getSubStr(%num2, 0, %m);
+		else
+			%y1 = getSubStr(%num2, 0, %a);
+	}
+	%z0 = Karat(%x0, %y0);
+	%z2 = Karat(%x1, %y1);
+	%z1 = stringSub(strMul(intadd(%x1, %x0), intadd(%y1, %y0)), intAdd(%z0, %z2));
+	%a = shiftLeft("", %m);
+	return strReplace(lTrim(strReplace(intAdd(intAdd(%z2 @ %a, %z1) @ %a, %z0), "0", " ")), " ", "0");
+}
+
+function stringAdd(%num1, %num2)
+{
+	%a = getDecimal(%num1); %b = getDecimal(%num2);
+	%decPlace = getmax(%a, %b);
+	if(%decPlace != -1)
+	{
+		if(%a == -1 && %b != -1)
+			%num1 = %num1 @ ".0";
+		else if(%b == -1 && %a != -1)
+			%num2 = %num2 @ ".0";
+		%x = equ0sd(%num1, %num2);
+		%num1 = strreplace(getWord(%x, 0), ".", "");
+		%num2 = strreplace(getWord(%x, 1), ".", "");
+	}
+	else
+	{
+		%x = equ0s(%num1, %num2);
+		%num1 = getWord(%x, 0);
+		%num2 = getWord(%x, 1);
+	}
+	for(%a=0;%a<strLen(%num1);%a++)
+	{
+		%start[%a] = getSubStr(%num1, %a, 1);
+		%adder[%a] = getSubStr(%num2, %a, 1);
+	}
+	%Length = strLen(%num1);
+	for(%a = %Length - 1; %a >= 0; %a--)
+	{
+		%res = %start[%a] + %adder[%a] + %Carry;
+>>>>>>> 553028573cb0d793601998f536b7be287639440e
 		if(%res > 9 && %a != 0)
 		{
 			%Carry = 1;
-			%Answer = %res-10 @ %Answer;
+			%Ans[%a] = %res - 10;
 			continue;
 		}
-		else
-			%Carry=0;
-		%Answer = %res @ %Answer;
+		if(%res < 10)
+			%Carry = 0;
+		%Ans[%a] = %res;
 	}
+	for(%a = 0; %a < %length; %a++)
+	{
+		if(%a == %decPlace)
+		{
+			%Answer = %Answer @ "." @ %Ans[%a];
+			continue;
+		}
+		%Answer = %Answer @ %Ans[%a];
+	}
+	if(%decplace > 1)
+		%Answer = stripend0s(%Answer);
 	return %Answer;
 }
 
-//This is probably the most unoptimised of all the functions here.
 function stringSub(%num1, %num2)
 {
-	if(%Num1 < 0)
-		%Num1 = switchS(%Num1);
-	if(%Num2 < 0)
-		%Num2 = switchS(%Num2);
-	
-	//We have to equalise the length of the two strings.
-	%a = equ0s(%num1, %num2);
-	
-	%num1 = getWord(%a, 0);
-	%num2 = getWord(%a, 1);
-	
-	%Count = strLen(%num1);
-	
-	//We have to put these in arrays so we can account for lookahead carrying.
-	for(%a = 0; %a < %Count; %a++)
+	%a = getDecimal(%num1); %b = getDecimal(%num2);
+	%decPlace = getmax(%a, %b);
+	if(%decPlace != -1)
 	{
-		%start[%a] = getSubStr(%num1, %a, 1);
-		%subtractor[%a] = getSubStr(%num2, %a, 1);
+		if(%a == -1 && %b != -1)
+			%num1 = %num1 @ ".0";
+		else if(%b == -1 && %a != -1)
+			%num2 = %num2 @ ".0";
+		%x = equ0sd(%num1, %num2);
+		%num1 = strreplace(getWord(%x, 0), ".", "");
+		%num2 = strreplace(getWord(%x, 1), ".", "");
 	}
-	
-	//Account for cases where the result will be negative
+	else
+	{
+		%x = equ0s(%num1, %num2);
+		%num1 = getWord(%x, 0);
+		%num2 = getWord(%x, 1);
+	}
+	for(%a=0;%a<strLen(%num1);%a++)
+	{
+		%start[%a]=getSubStr(%num1,%a,1);
+		%subtractor[%a]=getSubStr(%num2,%a,1);
+	}
 	if(%num1 < %num2)
+<<<<<<< HEAD
 		return "-" @ stringSub(%num2, %num1);
 	
 	if(!strCmp(%num1, %num2))
+=======
+		return "-" @ stringSub(%num2, %num1, %x);
+	if(%num1 $= %num2)
+>>>>>>> 553028573cb0d793601998f536b7be287639440e
 		return "0";
-	
 	%Length = strLen(%num1);
-	
-	//This is the most complicated part of the script.
 	for(%a = %Length - 1; %a >= 0; %a--)
 	{
 		%res = %start[%a] - %subtractor[%a];
 		if(%res < 0)
+		{
 			for(%b=%a-1;%b>=0;%b--)
 			{
 				if(%start[%b] - %subtractor[%b] > 0)
@@ -276,22 +428,33 @@ function stringSub(%num1, %num2)
 					break;
 				}
 			}
-		
-		%res = %start[%a] - %subtractor[%a];
-		
-		%Answer = %res @ %Answer;
+			%res = %start[%a] - %subtractor[%a];
+		}
+		%Ans[%a] = %res;
 	}
-	
-	//Sometimes the answer will come out with leading zeroes, so we get rid of those here.
-	%Answer = strReplace(lTrim(strReplace(%Answer, "0", " ")), " ", "0");
-	
+	%trim = true;
+	for(%a = 0; %a < %length; %a++)
+	{
+		if(%Ans[%a] == 0 && %trim == true && %a != %decPlace - 1)
+			continue;
+		if(%a == %decPlace)
+		{
+			%Answer = %Answer @ "." @ %Ans[%a];
+			continue;
+		}
+		%Answer = %Answer @ %Ans[%a];
+		%trim = false;
+	}
+	if(%decplace > 1)
+		%Answer = stripend0s(%Answer);
 	return %Answer;
 }
 
 //This function equalises the length of two numbers by adding zeroes behind the shorter one.
-function equ0s(%num1, %num2)
+function equ0s(%num1, %num2, %mod)
 {
 	%x = strLen(%num1); %y = strLen(%num2);
+<<<<<<< HEAD
 	if(%x < %y)
 		%num1 = shiftLeft("", %y - %x) @ %num1;
 	else if(%x > %y)
@@ -317,4 +480,219 @@ function expon(%a, %b, %d)
 		%c = expon(%a, %b / 2, %d++);
 		return Math_Multiply(%c, %c);
 	}
+=======
+	if(!%mod)
+	{
+		if(%x < %y)
+			%num1 = shiftLeft("", %y - %x) @ %num1;
+		else if(%x > %y)
+			%num2 = shiftLeft("", %x - %y) @ %num2;
+	}
+	else
+	{
+		if(%x < %y)
+			%num1 = %num1 @ shiftLeft("", %y - %x);
+		else if(%x > %y)
+			%num2 = %num2 @ shiftLeft("", %x - %y);
+	}
+	return %num1 SPC %num2;
+}
+
+
+function expon(%a, %b, %d)
+{
+	if(%b == 0)
+		return 1;
+	else if(%b < 0)
+		return expon(1/%a, -1 * %b, %d++);
+	else if(%b % 2 == 1)
+	{
+		%c = expon(%a, (%b - 1) / 2, %d++);
+		return Math_Multiply(%a, Math_Multiply(%c, %c));
+	}
+	else if(%b % 2 == 0)
+	{
+		%c = expon(%a, %b / 2, %d++);
+		return Math_Multiply(%c, %c);
+	}
+}
+
+function stripend0s(%i)
+{
+	if(%i $= "")
+		return"";
+	for(%a=0;%a<strLen(%i);%a++)
+		%i[%a] = getSubStr(%i, %a, 1);
+	%trim = true;
+	for(%a=strLen(%i)-1;%a>-1;%a--)
+	{
+		if(%trim == true && %i[%a] $= "0")
+		{
+			%i[%a] = "";
+			continue;
+		}
+		else if(%trim == true && %i[%a] $= ".")
+		{
+			%i[%a] = "";
+			continue;
+		}
+		%trim = false;
+	}
+	for(%a=0;%a<strLen(%i);%a++)
+		%b = %b @ %i[%a];
+	return %b;
+}
+
+function getIntPart(%i)
+{
+	if(strpos(%i, ".") == -1)
+		return %i;
+	return getSubStr(%i, 0, strLen(%i) - strLen(strchr(%i, ".")));
+}
+
+function getDecPart(%i)
+{
+	if(strPos(%i, ".") == -1)
+		return"";
+	return getSubStr(strChr(%i, "."), 1, 99999);
+}
+
+function getDecimal(%i)
+{
+	return strpos(%i, ".");
+}
+
+function equ0sd(%num1, %num2)
+{
+	%a = getIntPart(%num1); %b = getIntPart(%num2);
+	%c = getDecPart(%num1); %d = getDecPart(%num2);
+	%e = equ0s(%a, %b);
+	%f = equ0s(%c, %d, 1);
+	return getWord(%e, 0) @ "." @ getWord(%f, 0) @ " " @ getWord(%e, 1) @ "." @ getWord(%f, 1);
+}
+
+//Equivalent to multiplying by 10^-%place
+function placeDecimal(%num, %place)
+{
+	if(strPos(%num, ".") != -1 || %place == 0)
+		return %num;
+	%log = strLen(%num);
+	%pos = %log - %place;
+	if(%pos <= 0)
+	{
+		%start = 0;
+		%end = shiftLeft("", -%pos) @ %num;
+	}
+	else
+	{
+		%start = getSubStr(%num, 0, %pos);
+		%end = getSubStr(%num, %pos, 9999);
+	}
+	
+	return %start @ "." @ %end;
+}
+
+function getPlaces(%num)
+{
+	if(strPos(%num, ".") == -1)
+		return 0;
+	%num = stripend0s(%num);
+	return getMax(strLen(strChr(%num, ".")) - 1, 0);
+}
+
+function cleanNumber(%num)
+{
+	%a = strReplace(lTrim(strReplace(getIntPart(%num), "0", " ")), " ", "0");
+	
+	%b = stripend0s(getDecPart(%num));
+	if(%a $= "" && %b !$= "")
+		%a = 0;
+	return %a @ (%b !$= "" ? "." @ %b: "");
+}
+
+//integers only for now
+function Math_Divide(%n, %d, %q)
+{
+	%qo = %q;
+	if(%qo == 0)
+		%qo=-1;
+	%aa = strLen(getIntPart(%n));
+	%bb = strLen(getIntPart(%d));
+	%xx = mAbs(%aa - %bb) + 1;
+	%q *= 2;
+	%q = getMax(%xx,%q);
+	
+	%e = Math_Multiply(getMax(strLen(getIntPart(%d))-1,1), 3.321928, -1);
+	%dd = Math_Multiply(%d, Math_Pow(0.5, %e), %q);
+	while(%dd > 1)
+	{
+		%dd = Math_Multiply(0.5, %dd, %q);
+		%e++;
+	}
+	%n = Math_Multiply(%n, Math_Pow(0.5, %e), %q);
+	%x = Math_Subtract(2.823, Math_Multiply(1.882, %dd, %q));
+	%x=%dd;
+	while(true)
+	{
+		%x = Math_Multiply(%x, Math_Subtract(2, Math_Multiply(%dd, %x, %q)), %q);
+		%z++;
+		if(%lastx $= %x)
+		{
+			if(%z < %xx)
+				continue;
+			break;
+		}
+		%lastx = %x;
+	}
+	return Math_Multiply(%n,%x,%qo);
+}
+
+function Math_DivideFloor(%n, %d)
+{
+	%aa = strLen(getIntPart(%n));
+	%bb = strLen(getIntPart(%d));
+	%xx = mAbs(%aa - %bb) + 1;
+	
+	%e = Math_Multiply(getMax(strLen(getIntPart(%d))-1,1), 3.321928, -1);
+	%z = Math_Pow(0.5, %e);
+	%zz = %e;
+	%dd = Math_Multiply(%d, %z, %xx);
+	while(%dd > 1)
+	{
+		%dd = Math_Multiply(0.5, %dd, %xx);
+		%e++;
+	}
+	%n = Math_Multiply(%n, Math_Multiply(%z, Math_Pow(0.5, %e-%zz)), %xx);
+	%x = Math_Subtract(2.823, Math_Multiply(1.882, %dd, %xx));
+	%x=%dd;
+	for(%z = 0; %z < %xx; %z++)
+	{
+		%x = Math_Multiply(%x, Math_Subtract(2, Math_Multiply(%dd, %x, %xx)), %xx);
+		if(%lastx $= %x || %z >= %xx)
+			break;
+		%lastx = %x;
+	}
+	return Math_Multiply(%n,%x,-1);
+}
+
+function Math_Mod(%a,%b)
+{
+	return Math_Subtract(%a, Math_Multiply(%b, Math_DivideFloor(%a, %b)));
+}
+
+function divider(%numer, %denom, %numDec)
+{
+	%result = Math_DivideFloor(%numer, %denom);
+	%rem = Math_Subtract(%numer, Math_Multiply(%denom, %result)) @ "0";
+	echo(%result SPC %rem);
+	%result = %result @ ".";
+	for (%i=0;%i<%numDec;%i++)
+	{
+		%x = Math_DivideFloor(%denom, %rem);
+		echo(%x);
+		%result = %result @ %x;
+		%rem = Math_Subtract(%rem, Math_Multiply(%denom, %x)) @ "0";
+	}
+	return %result;
+>>>>>>> 553028573cb0d793601998f536b7be287639440e
 }
