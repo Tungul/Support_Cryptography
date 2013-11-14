@@ -54,12 +54,8 @@ function Math_Subtract(%num1, %num2)
 }
 
 //Multiplication
-<<<<<<< HEAD
-function Math_Multiply(%num1,%num2)
-=======
 //0 for maxplaces means no limit, -1 means no decimal places
 function Math_Multiply(%num1,%num2, %maxplaces)
->>>>>>> 553028573cb0d793601998f536b7be287639440e
 {
 	//Check if we can use torque multiplication
 	if((%a=strLen(%num1 @ %num2)) < 7)
@@ -73,22 +69,6 @@ function Math_Multiply(%num1,%num2, %maxplaces)
 	if(%Num2 < 0)
 		%Num2 = switchS(%Num2);
 	
-<<<<<<< HEAD
-	//Check if it's better to use classic or karatsuba
-	if(%a - strLen(%num2) < 15 && %a - strLen(%num1) < 15)
-		return %ans @ strMul(%num1, %num2);
-	
-	return %ans @ Karat(%num1, %num2);
-}
-
-function Math_Pow(%num1, %num2)
-{
-	if(%num2 < 0)
-		return 0;
-	if(%num2 == 0 || %num1 == 1)
-		return 1;
-	
-=======
 	%num1 = cleanNumber(%num1); %num2 = cleanNumber(%num2);
 	
 	if(%maxplaces == 0)
@@ -131,7 +111,6 @@ function Math_Pow(%num1, %num2)
 	if(%num2 == 0 || %num1 == 1)
 		return 1;
 	
->>>>>>> 553028573cb0d793601998f536b7be287639440e
 	return expon(%num1, %num2);
 }
 
@@ -205,7 +184,6 @@ function strMul(%Num1,%Num2)
 //Karatsuba multiplication algorithm
 //This is faster than the classic multiplication for most numbers greater than 40 digits long.
 function Karat(%num1,%num2)
-<<<<<<< HEAD
 {
 	%len1 = strLen(%num1); %len2 = strLen(%num2);
 	if(%len1 + %len2 <= 40 || %len1 < 5 || %len2 < 5)
@@ -228,69 +206,6 @@ function Karat(%num1,%num2)
 	}
 	else if(%len2 <= %m)
 	{
-		%y0 = %num2;
-		%y1 = "0";
-		%x0 = getSubStr(%num1, %y, %len1);
-		%a = %len1 % %m;
-		if(%a == 0)
-			%x1 = getSubStr(%num1, 0, %m);
-		else
-			%x1 = getSubStr(%num1, 0, %a);
-	}
-	else
-	{
-		%x0 = getSubStr(%num1, %y, %len1);
-		%a = %len1 % %m;
-		if(%a == 0)
-			%x1 = getSubStr(%num1, 0, %m);
-		else
-			%x1 = getSubStr(%num1, 0, %a);
-		%y0 = getSubStr(%num2, %z, %len2);
-		%a = %len2 % %m;
-		if(%a == 0)
-			%y1 = getSubStr(%num2, 0, %m);
-		else
-			%y1 = getSubStr(%num2, 0, %a);
-	}
-	%z0 = Karat(%x0, %y0);
-	%z2 = Karat(%x1, %y1);
-	%z1 = stringSub(strMul(intadd(%x1, %x0), intadd(%y1, %y0)), intAdd(%z0, %z2));
-	%a = shiftLeft("", %m);
-	return strReplace(lTrim(strReplace(intAdd(intAdd(%z2 @ %a, %z1) @ %a, %z0), "0", " ")), " ", "0");
-}
-
-function intAdd(%num1,%num2)
-=======
->>>>>>> 553028573cb0d793601998f536b7be287639440e
-{
-	%len1 = strLen(%num1); %len2 = strLen(%num2);
-	if(%len1 + %len2 <= 40 || %len1 < 5 || %len2 < 5)
-		return strMul(%num1, %num2);
-	%m = mCeil(getMax(%len1, %len2) / 2);
-	%y=%len1-%m;
-	%z=%len2-%m;
-	if(%num1 $= "0" || %num2 $= "0")
-		return "0";
-	if(%len1 <= %m)
-	{
-		%x0 = %num1;
-		%x1 = "0";
-		%y0 = getSubStr(%num2, %z, %len2);
-		%a = %len2 % %m;
-		if(%a == 0)
-			%y1 = getSubStr(%num2, 0, %m);
-		else
-			%y1 = getSubStr(%num2, 0, %a);
-	}
-	else if(%len2 <= %m)
-	{
-<<<<<<< HEAD
-		%d = %l1 - (%f-%a);
-		%e = %l2-(%f-%a);
-		%b = %d >=0 ? getSubStr(%Num1,%d,1) : "0";
-		%c = %e >=0 ? getSubStr(%Num2,%e,1) : "0";
-		%res = %b+%c+%Carry;
-=======
 		%y0 = %num2;
 		%y1 = "0";
 		%x0 = getSubStr(%num1, %y, %len1);
@@ -351,7 +266,6 @@ function stringAdd(%num1, %num2)
 	for(%a = %Length - 1; %a >= 0; %a--)
 	{
 		%res = %start[%a] + %adder[%a] + %Carry;
->>>>>>> 553028573cb0d793601998f536b7be287639440e
 		if(%res > 9 && %a != 0)
 		{
 			%Carry = 1;
@@ -402,14 +316,8 @@ function stringSub(%num1, %num2)
 		%subtractor[%a]=getSubStr(%num2,%a,1);
 	}
 	if(%num1 < %num2)
-<<<<<<< HEAD
-		return "-" @ stringSub(%num2, %num1);
-	
-	if(!strCmp(%num1, %num2))
-=======
 		return "-" @ stringSub(%num2, %num1, %x);
 	if(%num1 $= %num2)
->>>>>>> 553028573cb0d793601998f536b7be287639440e
 		return "0";
 	%Length = strLen(%num1);
 	for(%a = %Length - 1; %a >= 0; %a--)
@@ -454,33 +362,6 @@ function stringSub(%num1, %num2)
 function equ0s(%num1, %num2, %mod)
 {
 	%x = strLen(%num1); %y = strLen(%num2);
-<<<<<<< HEAD
-	if(%x < %y)
-		%num1 = shiftLeft("", %y - %x) @ %num1;
-	else if(%x > %y)
-		%num2 = shiftLeft("", %x - %y) @ %num2;
-	
-	return %num1 SPC %num2;
-}
-
-
-function expon(%a, %b, %d)
-{
-	if(%b == 0)
-		return 1;
-	else if(%b < 0)
-		return expon(1/%a, -1 * %b, %d++);
-	else if(%b % 2 == 1)
-	{
-		%c = expon(%a, (%b - 1) / 2, %d++);
-		return Math_Multiply(%a, Math_Multiply(%c, %c));
-	}
-	else if(%b % 2 == 0)
-	{
-		%c = expon(%a, %b / 2, %d++);
-		return Math_Multiply(%c, %c);
-	}
-=======
 	if(!%mod)
 	{
 		if(%x < %y)
@@ -694,5 +575,4 @@ function divider(%numer, %denom, %numDec)
 		%rem = Math_Subtract(%rem, Math_Multiply(%denom, %x)) @ "0";
 	}
 	return %result;
->>>>>>> 553028573cb0d793601998f536b7be287639440e
 }
