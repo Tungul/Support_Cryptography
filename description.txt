@@ -1,3 +1,3 @@
-Support_Cryptography
-Cryptographical functions library
-By Lugnut (16807), Ipquarx (), and Greek2Me ()
+Title: Support_Cryptography
+Author: Lugnut (16807), Ipquarx (), and Greek2Me (11902)
+Cryptographical functions library.
