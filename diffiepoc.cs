@@ -1,45 +1,38 @@
 exec("./lib/Math.cs");
-exec("./src/prime.cs")
-
-function mod(%a,%b)
-{
-	return Math_Subtract(%a, Math_Multiply(%b, Math_DivideFloor(%a,%b)));
-}
+exec("./src/prime.cs");
 
 $pubPrime = 23;
 $pubBase = 5;
 $aliceSecret = 5;
 $bobSecret = 15;
 
-$alicePublic = mod(math_pow($pubBase, $aliceSecret), $pubPrime);
-
-echo("Alice Public:" SPC $alicePublic);
-
-$bobPublic = mod(math_pow($pubBase, $bobSecret), $pubPrime);
-
-echo("Bob Public:" SPC $bobPublic);
-
-$secret = mod(math_pow($bobPublic, $aliceSecret), $pubPrime);
-
-echo("Secret Num:" SPC $secret);
-
-function Math_fastExpMod(%x, %e, %m) // this is the basic function, it needs to be implemented utilizing APA (Abritrary Precision Arithmetic).
+echo("Secret Num:" SPC $secret);function Math_fastExpMod(%x, %e, %m) // this is the basic function, it needs to be implemented utilizing APA (Abritrary Precision Arithmetic).
 {
-	%y = 1;
+	%y = "1";
 
-	%z = x;
+	%z = %x;
 
-	while(%e > 0)
+	while(alessthanb("0", %e))
 	{
-		if(%e % 2 != 0)
+		if(Math_Mod(%e ,"2") !$= "0")
 		{
-			%y = (%y * %z) % %m;
+			%y = Math_Mod(Math_Multiply(%y, %z), %m);
 		}
 
-		%z = (%z * %z) % %m;
+		%z = Math_Mod(Math_Multiply(%z, %z), %m);
 
-		%e = mFloor(%e / 2);
+		%e = Math_DivideFloor(%e, 2);
 	}
 
 	return %y;
 }
+
+$alicePublic = Math_fastExpMod($pubBase, $aliceSecret, $pubPrime);
+
+echo("Alice Public:" SPC $alicePublic);
+
+$bobPublic = Math_fastExpMod($pubBase, $bobSecret, $pubPrime);
+
+echo("Bob Public:" SPC $bobPublic);
+
+$secret = Math_fastExpMod($bobPublic, $aliceSecret, $pubPrime);
