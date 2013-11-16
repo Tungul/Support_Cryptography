@@ -1,5 +1,8 @@
 function isPrime(%num) // this is the basic function, it needs to be implemented utilizing APA (Abritrary Precision Arithmetic).
 {
+	if(%num == 1 || %num == 2 || %num == 3) //Happy, Xalos?
+		return true;
+
 	if(%num % 2 == 0)
 		return false;
 
