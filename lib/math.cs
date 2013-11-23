@@ -57,47 +57,54 @@ function Math_Subtract(%num1, %num2)
 //0 for maxplaces means no limit, -1 means no decimal places
 function Math_Multiply(%num1,%num2, %maxplaces)
 {
-	//Check if we can use torque multiplication
-	if((%a=strLen(%num1 @ %num2)) < 7)
-		return %num1 * %num2;
-	
-	//Here's a symbol you don't see everyday, the caret, AKA the XOR operator.
-	if(%num1 < 0 ^ %num2 < 0)
-		%ans = "-";
-	if(%Num1 < 0)
-		%Num1 = switchS(%Num1);
-	if(%Num2 < 0)
-		%Num2 = switchS(%Num2);
-	
-	%num1 = cleanNumber(%num1); %num2 = cleanNumber(%num2);
-	
 	if(%maxplaces == 0)
-		%maxplaces=-2;
+		%maxplaces = 500;
+	
+	//Check if we can use torque multiplication
+	if((%aaa=strLen(%num1 @ %num2)) < 6)
+	{
+		%ans = %num1 * %num2;
+		%dont = true;
+	}
+	else
+		%dont = false;
+	if(!%dont)
+	{
+		//Here's a symbol you don't see everyday, the caret, AKA the XOR operator.
+		if(%num1 < 0 ^ %num2 < 0)
+			%ans = "-";
+		if(%Num1 < 0)
+			%Num1 = switchS(%Num1);
+		if(%Num2 < 0)
+			%Num2 = switchS(%Num2);
+		
+		%num1 = cleanNumber(%num1); %num2 = cleanNumber(%num2);
+	}
 	
 	%a = getPlaces(%num1); %b = getPlaces(%num2);
 	%c = getMax(%a, %b);
-	
-	if(%c != 0)
+	if(!%dont)
 	{
-		%places = %a + %b;
-		%num1 = cleanNumber(strReplace(%num1, ".", ""));
-		%num2 = cleanNumber(strReplace(%num2, ".", ""));
+		if(%c != 0)
+		{
+			%places = %a + %b;
+			%num1 = cleanNumber(strReplace(%num1, ".", ""));
+			%num2 = cleanNumber(strReplace(%num2, ".", ""));
+		}
+		
+		if(%aaa - strLen(%num2) < 40 && %aaa - strLen(%num1) < 40)
+			%ans = %ans @ strMul(%num1, %num2);
+		else
+			%ans = %ans @ Karat(%num1, %num2);	
 	}
 	
-	if(%a - strLen(%num2) < 40 && %a - strLen(%num1) < 40)
-		%ans = %ans @ strMul(%num1, %num2);
-	else
-		%ans = %ans @ Karat(%num1, %num2);
-	
 	if(%c != 0)
 	{
-		%ans = cleanNumber(placeDecimal(%ans, %places));
-		if(%maxplaces != -1)
-		{
-			if(%maxplaces > 0)
-				%ans = getIntPart(%ans) @ "." @ getSubStr(getDecPart(%ans), 0, %maxplaces);
-		}
-		else
+		if(!%dont)
+			%ans = cleanNumber(placeDecimal(%ans, %places));
+		if(%maxplaces > 0)
+			%ans = getIntPart(%ans) @ "." @ getSubStr(getDecPart(%ans), 0, %maxplaces);
+		else if(%maxplaces != 0)
 			%ans = getIntPart(%ans);
 	}
 		
@@ -532,7 +539,7 @@ function Math_DivideFloor(%n, %d)
 {
 	%aa = strLen(getIntPart(%n));
 	%bb = strLen(getIntPart(%d));
-	%xx = mAbs(%aa - %bb) + 1;
+	%xx = mAbs(%aa - %bb) + 2;
 	
 	%e = Math_Multiply(getMax(strLen(getIntPart(%d))-1,1), 3.321928, -1);
 	%z = Math_Pow(0.5, %e);
@@ -543,9 +550,9 @@ function Math_DivideFloor(%n, %d)
 		%dd = Math_Multiply(0.5, %dd, %xx);
 		%e++;
 	}
+	
 	%n = Math_Multiply(%n, Math_Multiply(%z, Math_Pow(0.5, %e-%zz)), %xx);
 	%x = Math_Subtract(2.823, Math_Multiply(1.882, %dd, %xx));
-	%x=%dd;
 	for(%z = 0; %z < %xx; %z++)
 	{
 		%x = Math_Multiply(%x, Math_Subtract(2, Math_Multiply(%dd, %x, %xx)), %xx);
@@ -558,7 +565,31 @@ function Math_DivideFloor(%n, %d)
 
 function Math_Mod(%a,%b)
 {
-	return Math_Subtract(%a, Math_Multiply(%b, Math_DivideFloor(%a, %b)));
+	%x = %b;
+	%y = strLen(%a); %z = strLen(%b);
+	
+	if(alessthanb(%a,%b))
+		return %a;
+	else if((%aa=~~(3.4*(%y-%z))) > 0)
+		%b = Math_Multiply(%b, Math_Pow(2, %aa));
+	
+	while(!alessthanb(%a, %b))
+		%b = Math_Multiply(%b, 2);
+	
+	while(!alessthanb(%a, %x))
+	{
+		if(alessthanb(%a,%b))
+		{
+			%aa = ~~(3.4 * (strLen(%b) - strLen(%a)));
+			%b = Math_Multiply(%b, Math_Pow(0.5, getMax(1,%aa)), -1);
+			
+			while(alessthanb(%a, %b))
+				%b = Math_Multiply(%b, 0.5, -1);
+		}
+		
+		%a = Math_Subtract(%a, %b);
+	}
+	return %a;
 }
 
 function divider(%numer, %denom, %numDec)
