@@ -158,11 +158,14 @@ function strMul(%Num1,%Num2)
 	%Len1 = strlen(%Num1);
 	%Len2 = strlen(%Num2);
 	
+	for(%a = 0; %a < %len1; %a++)
+		%x[%a] = getSubStr(%num1, %a, 1);
+	
 	for(%a = %Len2-1; %a >= 0; %a--)
 	{
 		%x = getSubStr(%num2,%a,1);
 		for(%b = %Len1-1; %b >= 0; %b--)
-			%Products[%a+%b] += %x*getSubStr(%Num1,%b,1);
+			%Products[%a+%b] += %x*%x[%b];
 	}
 	
 	%MaxColumn = %Len1 + %Len2 + strlen(%Products0) - 3;
@@ -170,9 +173,10 @@ function strMul(%Num1,%Num2)
 	
 	for(%a = %Len2 + %Len1 - 2; %a >= 0; %a--)
 	{
-		%x = %a - strLen(%Products[%a]);
-		for(%b = strlen(%Products[%a]) - 1; %b >= 0; %b--)
-			%Digits[%MaxUse + %x + %b] += getSubStr(%Products[%a], %b, 1);
+		%b = strLen(%Products[%a]);
+		%x = %MaxUse + %a;
+		for(%b = %b - 1; %b >= 0; %b--)
+			%Digits[%x--] += getSubStr(%Products[%a], %b, 1);
 	}
 	
 	for(%a=%MaxColumn;%a>=0;%a--)
@@ -195,58 +199,26 @@ function strMul(%Num1,%Num2)
 
 //Karatsuba multiplication algorithm
 //This is faster than the classic multiplication for most numbers greater than 40 digits long.
-function Karat(%num1,%num2)
+
+function karat(%num1, %num2)
 {
-	%len1 = strLen(%num1); %len2 = strLen(%num2);
-	if(%len1 + %len2 <= 80 || %len1 < 5 || %len2 < 5)
-		return strMul(%num1, %num2);
-	%m = mCeil(getMax(%len1, %len2) / 2);
-	%y=%len1-%m;
-	%z=%len2-%m;
-	if(%num1 $= "0" || %num2 $= "0")
-		return "0";
-	if(%len1 <= %m)
-	{
-		%x0 = %num1;
-		%x1 = "0";
-		%y0 = getSubStr(%num2, %z, %len2);
-		%a = %len2 % %m;
-		if(%a == 0)
-			%y1 = getSubStr(%num2, 0, %m);
-		else
-			%y1 = getSubStr(%num2, 0, %a);
-	}
-	else if(%len2 <= %m)
-	{
-		%y0 = %num2;
-		%y1 = "0";
-		%x0 = getSubStr(%num1, %y, %len1);
-		%a = %len1 % %m;
-		if(%a == 0)
-			%x1 = getSubStr(%num1, 0, %m);
-		else
-			%x1 = getSubStr(%num1, 0, %a);
-	}
-	else
-	{
-		%x0 = getSubStr(%num1, %y, %len1);
-		%a = %len1 % %m;
-		if(%a == 0)
-			%x1 = getSubStr(%num1, 0, %m);
-		else
-			%x1 = getSubStr(%num1, 0, %a);
-		%y0 = getSubStr(%num2, %z, %len2);
-		%a = %len2 % %m;
-		if(%a == 0)
-			%y1 = getSubStr(%num2, 0, %m);
-		else
-			%y1 = getSubStr(%num2, 0, %a);
-	}
-	%z0 = Karat(%x0, %y0);
-	%z2 = Karat(%x1, %y1);
-	%z1 = stringSub(strMul(stringadd(%x1, %x0), stringadd(%y1, %y0)), stringAdd(%z0, %z2));
-	%a = shiftLeft("", %m);
-	return strReplace(lTrim(strReplace(stringAdd(stringAdd(%z2 @ %a, %z1) @ %a, %z0), "0", " ")), " ", "0");
+	%n = ~~((getmax(strLen(%num1), strLen(%num2)) + 1) / 2);
+	
+	if(%n < 150)
+		return strMul(%num1,%num2);
+	
+	%x = shiftLeft("",%n);
+	
+	%b = shiftRight(%num1, %n);
+	%a = stringsub(%num1, %b @ %x);
+	%d = shiftRight(%num2, %n);
+	%c = stringsub(%num2, %d @ %x);
+	
+	%ac = karat(%a, %c);
+	%bd = karat(%b, $d);
+	%abcd = karat(stringadd(%a, %b), stringadd(%c, %d));
+	
+	return stringadd(%ac, stringadd(%bd @ %x @ %x, stringsub(stringsub(%abcd, %ac), %bd) @ %x));
 }
 
 function stringAdd(%num1, %num2)
