@@ -92,7 +92,7 @@ function Math_Multiply(%num1,%num2, %maxplaces)
 			%num2 = cleanNumber(strReplace(%num2, ".", ""));
 		}
 		
-		if(%aaa - strLen(%num2) < 40 && %aaa - strLen(%num1) < 40)
+		if(%aaa <= 80)
 			%ans = %ans @ strMul(%num1, %num2);
 		else
 			%ans = %ans @ Karat(%num1, %num2);	
@@ -103,7 +103,7 @@ function Math_Multiply(%num1,%num2, %maxplaces)
 		if(!%dont)
 			%ans = cleanNumber(placeDecimal(%ans, %places));
 		if(%maxplaces > 0)
-			%ans = getIntPart(%ans) @ "." @ getSubStr(getDecPart(%ans), 0, %maxplaces);
+			%ans = cleanNumber(getIntPart(%ans) @ "." @ getSubStr(getDecPart(%ans), 0, %maxplaces));
 		else if(%maxplaces != 0)
 			%ans = getIntPart(%ans);
 	}
@@ -159,29 +159,34 @@ function strMul(%Num1,%Num2)
 	%Len2 = strlen(%Num2);
 	
 	for(%a = %Len2-1; %a >= 0; %a--)
+	{
+		%x = getSubStr(%num2,%a,1);
 		for(%b = %Len1-1; %b >= 0; %b--)
-			%Products[%a+%b] += getSubStr(%Num2,%a,1)*getSubStr(%Num1,%b,1);
+			%Products[%a+%b] += %x*getSubStr(%Num1,%b,1);
+	}
 	
-	%MaxColumn = %Len1 + %Len2 + strlen(%Products0) - 2;
-	%MaxUse = %MaxColumn - %Len1 - %Len2 + 2;
+	%MaxColumn = %Len1 + %Len2 + strlen(%Products0) - 3;
+	%MaxUse = %MaxColumn - %Len1 - %Len2 + 3;
 	
 	for(%a = %Len2 + %Len1 - 2; %a >= 0; %a--)
 	{
-		%x = strLen(%Products[%a]);
+		%x = %a - strLen(%Products[%a]);
 		for(%b = strlen(%Products[%a]) - 1; %b >= 0; %b--)
-			%Digits[%MaxUse + %a - %x + %b] += getSubStr(%Products[%a], %b, 1);
+			%Digits[%MaxUse + %x + %b] += getSubStr(%Products[%a], %b, 1);
 	}
 	
-	for(%a=%MaxColumn-1;%a>=0;%a--)
+	for(%a=%MaxColumn;%a>=0;%a--)
 	{
 		%Temp = %Digits[%a] + %Carry;
 		if(%Temp > 9 && %a != 0)
 		{
-			%Carry = getSubStr(%Temp, 0, strlen(%Temp) - 1);
-			%Temp = getSubStr(%Temp, strlen(%Temp) - 1, strlen(%Temp));
+			%x = strLen(%temp) - 1;
+			%Carry = getSubStr(%Temp, 0, %x);
+			%Temp = getSubStr(%Temp, %x, %x + 1);
 		}
 		else
 			%Carry = 0;
+		
 		%Result = %Temp @ %Result;
 	}
 	
@@ -193,7 +198,7 @@ function strMul(%Num1,%Num2)
 function Karat(%num1,%num2)
 {
 	%len1 = strLen(%num1); %len2 = strLen(%num2);
-	if(%len1 + %len2 <= 40 || %len1 < 5 || %len2 < 5)
+	if(%len1 + %len2 <= 80 || %len1 < 5 || %len2 < 5)
 		return strMul(%num1, %num2);
 	%m = mCeil(getMax(%len1, %len2) / 2);
 	%y=%len1-%m;
@@ -239,9 +244,9 @@ function Karat(%num1,%num2)
 	}
 	%z0 = Karat(%x0, %y0);
 	%z2 = Karat(%x1, %y1);
-	%z1 = stringSub(strMul(intadd(%x1, %x0), intadd(%y1, %y0)), intAdd(%z0, %z2));
+	%z1 = stringSub(strMul(stringadd(%x1, %x0), stringadd(%y1, %y0)), stringAdd(%z0, %z2));
 	%a = shiftLeft("", %m);
-	return strReplace(lTrim(strReplace(intAdd(intAdd(%z2 @ %a, %z1) @ %a, %z0), "0", " ")), " ", "0");
+	return strReplace(lTrim(strReplace(stringAdd(stringAdd(%z2 @ %a, %z1) @ %a, %z0), "0", " ")), " ", "0");
 }
 
 function stringAdd(%num1, %num2)
@@ -255,6 +260,8 @@ function stringAdd(%num1, %num2)
 		else if(%b == -1 && %a != -1)
 			%num2 = %num2 @ ".0";
 		%x = equ0sd(%num1, %num2);
+		%a = getDecimal(%num1); %b = getDecimal(%num2);
+		%decPlace = getmax(%a, %b);
 		%num1 = strreplace(getWord(%x, 0), ".", "");
 		%num2 = strreplace(getWord(%x, 1), ".", "");
 	}
@@ -308,6 +315,8 @@ function stringSub(%num1, %num2)
 		else if(%b == -1 && %a != -1)
 			%num2 = %num2 @ ".0";
 		%x = equ0sd(%num1, %num2);
+		%a = getDecimal(%num1); %b = getDecimal(%num2);
+		%decPlace = getmax(%a, %b);
 		%num1 = strreplace(getWord(%x, 0), ".", "");
 		%num2 = strreplace(getWord(%x, 1), ".", "");
 	}
@@ -453,7 +462,8 @@ function getDecimal(%i)
 function equ0sd(%num1, %num2)
 {
 	%a = getIntPart(%num1); %b = getIntPart(%num2);
-	%c = getDecPart(%num1); %d = getDecPart(%num2);
+	%c = (%c=getDecPart(%num1)) $= "" ? 0 : %c; %d = (%d=getDecPart(%num2)) $= "" ? 0 : %d;
+	
 	%e = equ0s(%a, %b);
 	%f = equ0s(%c, %d, 1);
 	return getWord(%e, 0) @ "." @ getWord(%f, 0) @ " " @ getWord(%e, 1) @ "." @ getWord(%f, 1);
@@ -491,11 +501,12 @@ function getPlaces(%num)
 function cleanNumber(%num)
 {
 	%a = strReplace(lTrim(strReplace(getIntPart(%num), "0", " ")), " ", "0");
-	
+	echo(%a @ " AAA");
 	%b = stripend0s(getDecPart(%num));
+	echo(%b);
 	if(%a $= "" && %b !$= "")
 		%a = 0;
-	return %a @ (%b !$= "" ? "." @ %b: "");
+	return %a @ (%b !$= "" ? "." @ %b : "");
 }
 
 //integers only for now
