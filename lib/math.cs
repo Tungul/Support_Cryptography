@@ -92,7 +92,7 @@ function Math_Multiply(%num1,%num2, %maxplaces)
 			%num2 = cleanNumber(strReplace(%num2, ".", ""));
 		}
 		
-		if(%aaa <= 80)
+		if(%aaa <= 300)
 			%ans = %ans @ strMul(%num1, %num2);
 		else
 			%ans = %ans @ Karat(%num1, %num2);	
@@ -148,53 +148,77 @@ function shiftLeft(%f,%a)
 	return (%e=%a%32) ? %f @ %c @ getSubStr(%d, 0, %e) : %f @ %c;
 }
 
-function strMul(%Num1,%Num2)
+function strmul(%num1, %num2)
 {
-	if(%Num1 < 0)
-		%Num1 = switchS(%Num1);
-	if(%Num2 < 0)
-		%Num2 = switchS(%Num2);
+	if(%num1 < 0)
+		%num1 = switchs(%num1);
+	if(%num2 < 0)
+		%num2 = switchs(%num2);
 	
-	%Len1 = strlen(%Num1);
-	%Len2 = strlen(%Num2);
+	%x = equ0s(%num1, %num2);
+	%num1 = getword(%x, 0);
+	%num2 = getword(%x, 1);
 	
-	for(%a = 0; %a < %len1; %a++)
-		%x[%a] = getSubStr(%num1, %a, 1);
+	%length2 = strLen(%num2);
+	%z = -1;
 	
-	for(%a = %Len2-1; %a >= 0; %a--)
+	
+	for(%a = strLen(%num1) - 3; %a >= 0; %a -= 3)
+		%n1[%z++] = getSubStr(%num1, %a, 3);
+	
+	if(%a > -3)
+		%n1[%z++] = getSubStr(%num1, 0, %a + 3);
+	
+	%tmp2 = 0;
+	%z++;
+	
+	for(%a = %length2 - 3; %a > -3; %a -= 3)
 	{
-		%x = getSubStr(%num2,%a,1);
-		for(%b = %Len1-1; %b >= 0; %b--)
-			%Products[%a+%b] += %x*%x[%b];
-	}
-	
-	%MaxColumn = %Len1 + %Len2 + strlen(%Products0) - 3;
-	%MaxUse = %MaxColumn - %Len1 - %Len2 + 3;
-	
-	for(%a = %Len2 + %Len1 - 2; %a >= 0; %a--)
-	{
-		%b = strLen(%Products[%a]);
-		%x = %MaxUse + %a;
-		for(%b = %b - 1; %b >= 0; %b--)
-			%Digits[%x--] += getSubStr(%Products[%a], %b, 1);
-	}
-	
-	for(%a=%MaxColumn;%a>=0;%a--)
-	{
-		%Temp = %Digits[%a] + %Carry;
-		if(%Temp > 9 && %a != 0)
-		{
-			%x = strLen(%temp) - 1;
-			%Carry = getSubStr(%Temp, 0, %x);
-			%Temp = getSubStr(%Temp, %x, %x + 1);
-		}
+		if(%a >= 0)
+			%n2 = getSubStr(%num2, %a, 3);
 		else
-			%Carry = 0;
+			%n2 = getSubStr(%num2, 0, %a + 3);
 		
-		%Result = %Temp @ %Result;
+		for(%b = 0; %b < %z; %b++)
+		{
+			%tmp = %n2 * %n1[%b];
+			%l = strLen(%tmp);
+			
+			%tt = %tmp2 + %b;
+			
+			if(%l < 4)
+				%tmps[%tt] += %tmp;
+			else
+			{
+				%l -= 3;
+				%tmps[%tt] += getsubstr(%tmp, %l, 3);
+				%tmps[%tt + 1] += getsubstr(%tmp, 0, %l);
+			}
+			
+			while(%tmps[%tt] > 999)
+			{
+				%tmps[%tt+1]++;
+				%tmps[%tt] %= 1000;
+				%tt++;
+			}
+		}
+		
+		%tmps[%tmp2] = $lt[%tmps[%tmp2]];
+		%answer1 = %tmps[%tmp2] @ %answer1;
+		
+		%tmp2++;
 	}
 	
-	return %Result;
+	%z += %tmp2 - 1;
+	for(%a = %tmp2; %a < %z; %a++)
+	{
+		if(%a + 1 != %z)
+			%tmps[%tmp2] = $lt[%tmps[%tmp2]];
+		
+		%answer1 = %tmps[%a] @ %answer1;
+	}
+	
+	return %answer1;
 }
 
 //Karatsuba multiplication algorithm
@@ -243,12 +267,12 @@ function stringAdd(%num1, %num2)
 		%num1 = getWord(%x, 0);
 		%num2 = getWord(%x, 1);
 	}
-	for(%a=0;%a<strLen(%num1);%a++)
+	%Length = strLen(%num1);
+	for(%a=0;%a<%Length;%a++)
 	{
 		%start[%a] = getSubStr(%num1, %a, 1);
 		%adder[%a] = getSubStr(%num2, %a, 1);
 	}
-	%Length = strLen(%num1);
 	for(%a = %Length - 1; %a >= 0; %a--)
 	{
 		%res = %start[%a] + %adder[%a] + %Carry;
@@ -473,15 +497,12 @@ function getPlaces(%num)
 function cleanNumber(%num)
 {
 	%a = strReplace(lTrim(strReplace(getIntPart(%num), "0", " ")), " ", "0");
-	echo(%a @ " AAA");
 	%b = stripend0s(getDecPart(%num));
-	echo(%b);
 	if(%a $= "" && %b !$= "")
 		%a = 0;
 	return %a @ (%b !$= "" ? "." @ %b : "");
 }
 
-//integers only for now
 function Math_Divide(%n, %d, %q)
 {
 	%qo = %q;
@@ -579,14 +600,271 @@ function divider(%numer, %denom, %numDec)
 {
 	%result = Math_DivideFloor(%numer, %denom);
 	%rem = Math_Subtract(%numer, Math_Multiply(%denom, %result)) @ "0";
-	echo(%result SPC %rem);
 	%result = %result @ ".";
 	for (%i=0;%i<%numDec;%i++)
 	{
 		%x = Math_DivideFloor(%denom, %rem);
-		echo(%x);
 		%result = %result @ %x;
 		%rem = Math_Subtract(%rem, Math_Multiply(%denom, %x)) @ "0";
 	}
 	return %result;
+}
+
+function intAdd(%num1,%num2)
+{
+	%l1=strLen(%num1)-1;
+	%l2=strLen(%num2)-1;
+	%f=getMax(%l1,%l2);
+	for(%a=%f;%a>=0;%a--)
+	{
+		%d = %l1 - (%f-%a);
+		%e = %l2-(%f-%a);
+		%b = %d >=0 ? getSubStr(%Num1,%d,1) : "0";
+		%c = %e >=0 ? getSubStr(%Num2,%e,1) : "0";
+		%res = %b+%c+%Carry;
+		if(%res > 9 && %a != 0)
+		{
+			%Carry = 1;
+			%Answer = %res-10 @ %Answer;
+			continue;
+		}
+		else
+			%Carry=0;
+		%Answer = %res @ %Answer;
+	}
+	return %Answer;
+}
+
+function alessthanb(%a, %b, %c, %d)
+{
+	if(%c $= "")
+		%c = strLen(%a);
+	if(%d $= "")
+		%d = strLen(%b);
+	
+	//Only do character-by-character comparisons if lengths are equal
+	if(%c != %d)
+		return %c < %d;
+	
+	for(%x = 0; %x < %c; %x+= 5)
+	{
+		%y = getSubStr(%a, %x, 5); %z = getSubStr(%b, %x, 5);
+		if(%y < %z)
+			return true;
+		else if(%y != %z)
+			return false;
+	}
+	return false;
+}
+
+for($zzz=0;$zzz<1000;$zzz++)
+{
+	$zzx = 3 - strlen($zzz);
+	if($zzx != 0)
+		$zzz = shiftLeft("", $zzx) @ $zzz;
+	$lt[$zzz+1-1] = $zzz;
+}
+for($zzz=0;$zzz<100000;$zzz++)
+{
+	$zzx = 5 - strlen($zzz);
+	if($zzx != 0)
+		$zzz = shiftLeft("", $zzx) @ $zzz;
+	$lt2[$zzz+1-1] = $zzz;
+}
+
+function Math_TDivide(%num1, %num2)
+{
+	%q = 0;
+	%r = 0;
+	fo
+}
+
+function Math_Log10Approx(%num)
+{
+	%l = strLen(%num) - 1;
+	return %l + mLog(getsubstr(placeDecimal(%num, %l), 0, 7)) / mLog(10);
+}
+
+function Math_Log2Approx(%num)
+{
+	return 3.322 * Math_Log10Approx(%num);
+}
+
+
+//FINITE FIELD MATH METHODS
+//USES INTEGERS ONLY
+
+function FMath_Add(%num1, %num2, %field)
+{
+	%length1 = strLen(%num1);
+	%length2 = strLen(%num2);
+	%max = getmax(%length1,%length2);
+	
+	if(%length2 != %length1)
+	{
+		%x = equ0s(%num1, %num2);
+		%num1 = getword(%x, 0);
+		%num2 = getword(%x, 1);
+	}
+	
+	if(%max < 5)
+	{
+		if(!alessthanb(%field, (%c=%num1+%num2)))
+			return %c;
+		else
+			return %c % %field;
+	}
+	
+	%carry = 0;
+	for(%a = %max - 5; 1; 1)
+	{
+		if(%a >= 0)
+		{
+			%n1 = getSubStr(%num1, %a, 5);
+			%n2 = getSubStr(%num2, %a, 5);
+		}
+		else
+		{
+			%x = %a + 5;
+			%n1 = getsubstr(%num1, 0, %x);
+			%n2 = getsubstr(%num2, 0, %x);
+		}
+		
+		%res = %n1 + %n2 + %carry;
+		
+		if(%res < 100000)
+			%carry = 0;
+		else
+		{
+			%res %= 100000;
+			%carry = 1;
+		}
+		
+		%a -= 5;
+		
+		if(%a > -5)
+			%result = $lt2[%res] @ %result;
+		else
+		{
+			%result = %res @ %result;
+			break;
+		}
+	}
+	
+	if(%field !$= "" && %field)
+	{
+		if(%field $= %result)
+			return 0;
+		
+		if(alessthanb(%field, %result))
+			return FMath_Subtract(%result, %field);
+	}
+	
+	return %result;
+}
+
+function FMath_Subtract(%num1, %num2, %field)
+{
+	%length1 = strLen(%num1);
+	%length2 = strLen(%num2);
+	%max = getmax(%length1,%length2);
+	
+	if(alessthanb(%num1, %num2))
+	{
+		if(%field !$= "")
+			return FMath_Subtract(%field, FMath_Subtract(%num2, %num1));
+		else
+			return "-" @ FMath_Subtract(%num2, %num1);
+	}
+	
+	if(%length1 != %length2)
+	{
+		%x = equ0s(%num1, %num2);
+		%num1 = getword(%x, 0);
+		%num2 = getword(%x, 1);
+	}
+	
+	%z = -1;
+	
+	for(%a = %max - 5; %a > -5; %a -= 5)
+	{
+		if(%a >= 0)
+		{
+			%n1[%z++] = getSubStr(%num1, %a, 5);
+			%n2[%z] = getSubStr(%num2, %a, 5);
+		}
+		else
+		{
+			%x = %a + 5;
+			%n1[%z++] = getsubstr(%num1, 0, %x);
+			%n2[%z] = getsubstr(%num2, 0, %x);
+		}
+	}
+	
+	%z++;
+	
+	for(%a = 0; %a < %z; %a++)
+	{
+		%res = %n1[%a] - %n2[%a];
+		if(%res < 0)
+		{
+			for(%b = %a + 1; %b < %z; %b++)
+			{
+				if(%n1[%b] - %n2[%b] > 0)
+				{
+					%n1[%b]--;
+					
+					for(%c = %b - 1; %c > %a; %c--)
+						%n1[%c] += 99999;
+					
+					%n1[%a] += 100000;
+					break;
+				}
+			}
+			%res = %n1[%a] - %n2[%a];
+		}
+		
+		if(%a + 1 != %z)
+			%Ans = $lt2[%res] @ %Ans;
+		else
+			%Ans = %res @ %Ans;
+	}
+	
+	return %Ans;
+}
+
+function FMath_Multiply(%num1, %num2, %field)
+{
+	%n = %num1;
+	%r = 0;
+	while(%num2 != 0)
+	{
+		if(%num2 % 2)
+			%r = FMath_Add(%r, %n, %field);
+		%n = FMath_Add(%n, %n, %field);
+		%num2 = shiftRight(FMath_Multiply2(%num2, 5), 1);
+	}
+	
+	return %r;
+}
+
+function FMath_Multiply2(%num1, %num2, %field)
+{
+	if(strLen(%num1) < 6)
+	{
+		if(%field !$= "")
+			return (%num1 * %num2) % %field;
+		return %num1 * %num2;
+	}
+	%n = %num1;
+	%r = 0;
+	while(%num2 != 0)
+	{
+		if(%num2 % 2)
+			%r = FMath_Add(%r, %n, %field);
+		%n = FMath_Add(%n, %n, %field);
+		%num2 = ~~(%num2/2);
+	}
+	
+	return %r;
 }
