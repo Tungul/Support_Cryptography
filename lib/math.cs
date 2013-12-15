@@ -139,13 +139,7 @@ function shiftRight(%a, %b)
 function shiftLeft(%f,%a)
 {
 	if(%f$="0")return%f;
-	%b = ~~(%a/32);
-	
-	%d="00000000000000000000000000000000";
-	for(%b = %b; %b > 0; %b--)
-		%c = %c @ %d;
-	
-	return (%e=%a%32) ? %f @ %c @ getSubStr(%d, 0, %e) : %f @ %c;
+	return getsubstr("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",0,%a);
 }
 
 function strmul(%num1, %num2)
@@ -155,65 +149,69 @@ function strmul(%num1, %num2)
 	if(%num2 < 0)
 		%num2 = switchs(%num2);
 	
-	%x = equ0s(%num1, %num2);
-	%num1 = getword(%x, 0);
-	%num2 = getword(%x, 1);
-	
 	%length2 = strLen(%num2);
+	%length1 = strLen(%num1);
 	%z = -1;
 	
+	for(%a = %length1 - 4; %a >= 0; %a -= 4)
+		%n1[%z++] = getSubStr(%num1, %a, 4);
 	
-	for(%a = strLen(%num1) - 3; %a >= 0; %a -= 3)
-		%n1[%z++] = getSubStr(%num1, %a, 3);
-	
-	if(%a > -3)
-		%n1[%z++] = getSubStr(%num1, 0, %a + 3);
+	if(%a > -4)
+		%n1[%z++] = getSubStr(%num1, 0, %a + 4);
 	
 	%tmp2 = 0;
 	%z++;
+	%zz = %z;
 	
-	for(%a = %length2 - 3; %a > -3; %a -= 3)
+	for(%a = %length2 - 4; %a > -4; %a -= 4)
 	{
 		if(%a >= 0)
-			%n2 = getSubStr(%num2, %a, 3);
+			%n2 = getSubStr(%num2, %a, 4);
 		else
-			%n2 = getSubStr(%num2, 0, %a + 3);
+			%n2 = getSubStr(%num2, 0, %a + 4);
 		
 		for(%b = 0; %b < %z; %b++)
 		{
-			%tmp = %n2 * %n1[%b];
+			%tmp = (%n2 * %n1[%b]) | 0;
+			
 			%l = strLen(%tmp);
 			
 			%tt = %tmp2 + %b;
 			
-			if(%l < 4)
+			if(%tmp < 10000)
+			{
 				%tmps[%tt] += %tmp;
+				%zz = getmax(%zz, %tt);
+			}
 			else
 			{
-				%l -= 3;
-				%tmps[%tt] += getsubstr(%tmp, %l, 3);
+				%l -= 4;
+				%tmps[%tt] += getsubstr(%tmp, %l, 4);
 				%tmps[%tt + 1] += getsubstr(%tmp, 0, %l);
+				%zz = getmax(%zz, %tt+1);
 			}
 			
-			while(%tmps[%tt] > 999)
+			while(%tmps[%tt] > 9999)
 			{
 				%tmps[%tt+1]++;
-				%tmps[%tt] %= 1000;
+				%tmps[%tt] %= 10000;
 				%tt++;
+				%zz = getmax(%zz, %tt);
 			}
 		}
 		
-		%tmps[%tmp2] = $lt[%tmps[%tmp2]];
-		%answer1 = %tmps[%tmp2] @ %answer1;
+		%answer1 = $lt[%tmps[%tmp2]] @ %answer1;
 		
 		%tmp2++;
 	}
 	
-	%z += %tmp2 - 1;
-	for(%a = %tmp2; %a < %z; %a++)
+	if(%tmps[%zz] != 0)
+		%zz++;
+	
+	for(%a = %tmp2; %a < %zz; %a++)
 	{
-		if(%a + 1 != %z)
-			%tmps[%tmp2] = $lt[%tmps[%tmp2]];
+		if(%a + 1 != %zz)
+			%tmps[%a] = $lt[%tmps[%a]];
 		
 		%answer1 = %tmps[%a] @ %answer1;
 	}
@@ -222,7 +220,7 @@ function strmul(%num1, %num2)
 }
 
 //Karatsuba multiplication algorithm
-//This is faster than the classic multiplication for most numbers greater than 40 digits long.
+//This is faster than the classic multiplication for most numbers greater than 300 digits long.
 
 function karat(%num1, %num2)
 {
@@ -610,31 +608,6 @@ function divider(%numer, %denom, %numDec)
 	return %result;
 }
 
-function intAdd(%num1,%num2)
-{
-	%l1=strLen(%num1)-1;
-	%l2=strLen(%num2)-1;
-	%f=getMax(%l1,%l2);
-	for(%a=%f;%a>=0;%a--)
-	{
-		%d = %l1 - (%f-%a);
-		%e = %l2-(%f-%a);
-		%b = %d >=0 ? getSubStr(%Num1,%d,1) : "0";
-		%c = %e >=0 ? getSubStr(%Num2,%e,1) : "0";
-		%res = %b+%c+%Carry;
-		if(%res > 9 && %a != 0)
-		{
-			%Carry = 1;
-			%Answer = %res-10 @ %Answer;
-			continue;
-		}
-		else
-			%Carry=0;
-		%Answer = %res @ %Answer;
-	}
-	return %Answer;
-}
-
 function alessthanb(%a, %b, %c, %d)
 {
 	if(%c $= "")
@@ -646,9 +619,9 @@ function alessthanb(%a, %b, %c, %d)
 	if(%c != %d)
 		return %c < %d;
 	
-	for(%x = 0; %x < %c; %x+= 5)
+	for(%x = 0; %x < %c; %x+= 9)
 	{
-		%y = getSubStr(%a, %x, 5); %z = getSubStr(%b, %x, 5);
+		%y = getSubStr(%a, %x, 9); %z = getSubStr(%b, %x, 9);
 		if(%y < %z)
 			return true;
 		else if(%y != %z)
@@ -657,26 +630,19 @@ function alessthanb(%a, %b, %c, %d)
 	return false;
 }
 
-for($zzz=0;$zzz<1000;$zzz++)
+for($zzz=0;$zzz<10000;$zzz++)
 {
-	$zzx = 3 - strlen($zzz);
-	if($zzx != 0)
+	$zzx = 4 - strlen($zzz);
+	if($zzx)
 		$zzz = shiftLeft("", $zzx) @ $zzz;
 	$lt[$zzz+1-1] = $zzz;
-}
-for($zzz=0;$zzz<100000;$zzz++)
-{
-	$zzx = 5 - strlen($zzz);
-	if($zzx != 0)
-		$zzz = shiftLeft("", $zzx) @ $zzz;
-	$lt2[$zzz+1-1] = $zzz;
 }
 
 function Math_TDivide(%num1, %num2)
 {
 	%q = 0;
 	%r = 0;
-	fo
+	
 }
 
 function Math_Log10Approx(%num)
@@ -707,7 +673,7 @@ function FMath_Add(%num1, %num2, %field)
 		%num2 = getword(%x, 1);
 	}
 	
-	if(%max < 5)
+	if(%max < 6)
 	{
 		if(!alessthanb(%field, (%c=%num1+%num2)))
 			return %c;
@@ -716,34 +682,42 @@ function FMath_Add(%num1, %num2, %field)
 	}
 	
 	%carry = 0;
-	for(%a = %max - 5; 1; 1)
+	for(%a = %max - 9; 1; 1)
 	{
 		if(%a >= 0)
 		{
-			%n1 = getSubStr(%num1, %a, 5);
-			%n2 = getSubStr(%num2, %a, 5);
+			%n1 = getSubStr(%num1, %a, 9);
+			%n2 = getSubStr(%num2, %a, 9);
 		}
 		else
 		{
-			%x = %a + 5;
+			%x = %a + 9;
 			%n1 = getsubstr(%num1, 0, %x);
 			%n2 = getsubstr(%num2, 0, %x);
 		}
 		
-		%res = %n1 + %n2 + %carry;
+		%res = ((%n1|0) + (%n2|0) + (%carry|0)) | 0;
+		%l = strlen(%res);
 		
-		if(%res < 100000)
-			%carry = 0;
-		else
+		if(%l > 9)
 		{
-			%res %= 100000;
+			%res = ((%res|0) % 1000000000) | 0;
+			%l = strlen(%res);
 			%carry = 1;
 		}
+		else
+			%carry = 0;
 		
-		%a -= 5;
+		%a -= 9;
 		
-		if(%a > -5)
-			%result = $lt2[%res] @ %result;
+		if(%a > -9)
+		{
+			%l = 9 - %l;
+			if(%l > 0)
+				%res = getsubstr("00000000",0,%l) @ %res;
+			
+			%result = %res @ %result;
+		}
 		else
 		{
 			%result = %res @ %result;
@@ -751,7 +725,8 @@ function FMath_Add(%num1, %num2, %field)
 		}
 	}
 	
-	if(%field !$= "" && %field)
+	
+	if(%field !$= "" && %field !$= "0")
 	{
 		if(%field $= %result)
 			return 0;
@@ -786,18 +761,19 @@ function FMath_Subtract(%num1, %num2, %field)
 	
 	%z = -1;
 	
-	for(%a = %max - 5; %a > -5; %a -= 5)
+	for(%a = %max - 9; 1; %a -= 9)
 	{
 		if(%a >= 0)
 		{
-			%n1[%z++] = getSubStr(%num1, %a, 5);
-			%n2[%z] = getSubStr(%num2, %a, 5);
+			%n1[%z++] = getSubStr(%num1, %a, 9);
+			%n2[%z] = getSubStr(%num2, %a, 9);
 		}
 		else
 		{
-			%x = %a + 5;
+			%x = %a + 9;
 			%n1[%z++] = getsubstr(%num1, 0, %x);
 			%n2[%z] = getsubstr(%num2, 0, %x);
+			break;
 		}
 	}
 	
@@ -805,27 +781,28 @@ function FMath_Subtract(%num1, %num2, %field)
 	
 	for(%a = 0; %a < %z; %a++)
 	{
-		%res = %n1[%a] - %n2[%a];
-		if(%res < 0)
+		%res = ((%n1[%a]|0) - (%n2[%a]|0))|0;
+		
+		if(%res @ "" < 0)
 		{
 			for(%b = %a + 1; %b < %z; %b++)
 			{
 				if(%n1[%b] - %n2[%b] > 0)
 				{
-					%n1[%b]--;
+					%n1[%b] = ((%n1[%b]|0) - 1) | 0;
+					%n1[%a] = ((%n1[%a]|0) + 1000000000) | 0;
 					
 					for(%c = %b - 1; %c > %a; %c--)
-						%n1[%c] += 99999;
+						%n1[%c] = ((%n1[%c]|0) + 999999999) | 0;
 					
-					%n1[%a] += 100000;
 					break;
 				}
 			}
-			%res = %n1[%a] - %n2[%a];
+			%res = ((%n1[%a]|0) - (%n2[%a]|0))|0;
 		}
 		
 		if(%a + 1 != %z)
-			%Ans = $lt2[%res] @ %Ans;
+			%Ans = ((%x=9-strlen(%res)) > 0 ? (getsubstr("00000000",0,%x) @ %res) : %res) @ %Ans;
 		else
 			%Ans = %res @ %Ans;
 	}
@@ -833,38 +810,67 @@ function FMath_Subtract(%num1, %num2, %field)
 	return %Ans;
 }
 
+//Only uses FMath_Add, FMath_Subtract (as it's in FMath_Add), and strmul for dividing.
+//If you have ANY way of speeding this up, PLEASE do. At the moment it takes ~80ms to process 77 digit numbers. That's actually a while.
 function FMath_Multiply(%num1, %num2, %field)
 {
 	%n = %num1;
 	%r = 0;
+	
 	while(%num2 != 0)
 	{
-		if(%num2 % 2)
+		%tmp = getsubstr(%num2, getmax(strlen(%num2) - 5, 0), 5);
+		
+		if(%tmp % 2)
 			%r = FMath_Add(%r, %n, %field);
+		
 		%n = FMath_Add(%n, %n, %field);
-		%num2 = shiftRight(FMath_Multiply2(%num2, 5), 1);
+		
+		%tmp = ~~(%tmp/2);
+		
+		if(%tmp % 2)
+			%r = FMath_Add(%r, %n, %field);
+		
+		%n = FMath_Add(%n, %n, %field);
+		
+		%tmp = ~~(%tmp/2);
+		
+		if(%tmp % 2)
+			%r = FMath_Add(%r, %n, %field);
+		
+		%n = FMath_Add(%n, %n, %field);
+		
+		%tmp = ~~(%tmp/2);
+		
+		if(%tmp % 2)
+			%r = FMath_Add(%r, %n, %field);
+		
+		%n = FMath_Add(%n, %n, %field);
+		
+		%tmp = ~~(%tmp/2);
+		
+		if(%tmp % 2)
+			%r = FMath_Add(%r, %n, %field);
+		
+		%n = FMath_Add(%n, %n, %field);
+		
+		%num2 = divideby32(%num2);
 	}
 	
 	return %r;
 }
 
-function FMath_Multiply2(%num1, %num2, %field)
+function divideby4(%num)
 {
-	if(strLen(%num1) < 6)
-	{
-		if(%field !$= "")
-			return (%num1 * %num2) % %field;
-		return %num1 * %num2;
-	}
-	%n = %num1;
-	%r = 0;
-	while(%num2 != 0)
-	{
-		if(%num2 % 2)
-			%r = FMath_Add(%r, %n, %field);
-		%n = FMath_Add(%n, %n, %field);
-		%num2 = ~~(%num2/2);
-	}
-	
-	return %r;
+	return strlen(%num) > 5 ? shiftRight(strmul(%num, 25), 2) : ~~(%num/4);
+}
+
+function divideby2(%num)
+{
+	return strlen(%num) > 5 ? shiftRight(strmul(%num, 5), 1) : ~~(%num/2);
+}
+
+function divideby32(%num)
+{
+	return strlen(%num) > 5 ? shiftRight(strmul(%num, 3125), 5) : ~~(%num/32);
 }
